@@ -1,0 +1,8 @@
+// Stage 2: Identificar as categorias compradas e listar os produtos já adquiridos
+$group:
+{
+  _id: "$produto_categoria",
+  comprados: {
+    $addToSet: "$produto_id"
+  }
+}

@@ -1,0 +1,58 @@
+db.getCollection('purchases').aggregate(
+  [
+    // Stage1: Filtrar transações do utilizador
+    {
+        $match: { user_id: 'u5' }
+    },
+    
+    // Stage 2: Identificar as categorias compradas e listar os produtos já adquiridos
+    {
+      $group: {
+        _id: '$produto_categoria',
+        comprados: { $addToSet: '$produto_id' }
+      }
+    },
+
+    // Stage 3: Sub-consulta complexa para sugestão de novos produtos
+    {
+      $lookup: {
+        from: 'products',
+        let: {
+          cat: '$_id',
+          jaComprados: '$comprados'
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ['$categoria', '$$cat']
+                  },
+                  {
+                    $not: {
+                      $in: [
+                        '$_id',
+                        '$$jaComprados'
+                      ]
+                    }
+                  },
+                  {
+                    $gt: [
+                      '$quantidade_estoque',
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          { $sort: { avaliacao_media: -1 } },
+          { $limit: 3 }
+        ],
+        as: 'sugestoes'
+      }
+    }
+  ],
+  { maxTimeMS: 60000, allowDiskUse: true }
+);

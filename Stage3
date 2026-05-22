@@ -1,0 +1,39 @@
+// Stage 3: Sub-consulta complexa para sugestão de novos produtos
+$lookup:
+{
+  from: "products",
+  let: {
+    cat: "$_id",
+    jaComprados: "$comprados"
+  },
+  pipeline: [
+    {
+      $match: {
+        $expr: {
+          $and: [
+            {
+              $eq: ["$categoria", "$$cat"] // Produto pertence à categoria favorita
+            },
+            {
+              $not: {
+                $in: ["$_id", "$$jaComprados"] // Produto ainda não foi comprado
+              }
+            },
+            {
+              $gt: ["$quantidade_estoque", 0] // Produto tem stock disponível
+            }
+          ]
+        }
+      }
+    },
+    {
+      $sort: {
+        avaliacao_media: -1 // Recomendar os melhores cotados
+      }
+    },
+    {
+      $limit: 3 // Restringir a carga de rede a 3 sugestões
+    }
+  ],
+  as: "sugestoes"
+}
