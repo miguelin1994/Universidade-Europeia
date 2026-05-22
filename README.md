@@ -1,4 +1,4 @@
-# Universidade-Europeia
+# Universidade Europeia
 Unidade Curricular - Administração da Informação
 
 
